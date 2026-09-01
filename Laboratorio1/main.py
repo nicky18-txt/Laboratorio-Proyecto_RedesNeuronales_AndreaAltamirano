@@ -70,15 +70,13 @@ class red_neuronal:
             output = layer.forward(output)
         return output
 
-
+print("="*60)
+print("2. Cargar y preparar el conjunto de prueba")
+print("="*60)
 data = np.load("mnist_test.npz")
 
 images = data['images']
 labels = data['labels']
-
-print("="*60)
-print("2. Cargar e preparar lel conjunto de prueba")
-print("="*60)
 print("\nDatos cargados:")
 print("Forma de las imágenes: " + str(images.shape))
 print("Forma de las etiquetas: " + str(labels.shape)+"\n")
@@ -105,18 +103,19 @@ print("Red neuronal creada exitosamente\n")
 print("="*60)
 print("4. Ejecucion de inferencia sobre el conjunto completo")
 print("="*60+"\n")
-predicciones = red.forward(imagesAplanada)
+probab = red.forward(imagesAplanada)
+print(f"Forma de probabilidades: {probab.shape}\n")
 print("Forward pass completado exitosamente\n")
 
 print("Comprobando salida final. Debe tener la forma  (10000, 10)")
-print(f"Forma de salida: {predicciones.shape}")
-if predicciones.shape == (10000, 10):
+print(f"Forma de salida: {probab.shape}")
+if probab.shape == (10000, 10):
     print("La salida final es correcta\n")
 else:
     print("La salida final no es la esperada\n")
 
 print("Verificar que cada fila de la salida Softmax sume 1")
-sumas = np.sum(predicciones, axis=1)
+sumas = np.sum(probab, axis=1)
 
 if np.allclose(sumas, 1):
     print("Todas las filas suman 1\n")
@@ -125,7 +124,7 @@ else:
     print(f"Suma minima: {sumas.min()}, Suma maxima: {sumas.max()}\n")
 
 print("Clase predicha mediante el indice de mayor probabilidad")
-clases_predichas = np.argmax(predicciones, axis=1)
+clases_predichas = np.argmax(probab, axis=1)
 print(f"Clases predichas (forma): {clases_predichas.shape}")
 print(f"Primeras 10 clases predichas: {clases_predichas[:10]}\n")
 
@@ -141,7 +140,7 @@ print("="*60+"\n")
 for i in range(10):
     label_real = labels[i]
     predic = clases_predichas[i]
-    probabilidades = predicciones[i]
+    probabilidades = probab[i]
     confianza = probabilidades[predic]
 
     correcto = "correcto" if label_real == predic else "incorrecto"
@@ -151,12 +150,12 @@ for i in range(10):
         bar = '#' * int(prob * 30)
         print(f"Digito {digito}: {prob:.4f} {bar}")
 
-imagenI = 2
+imagenI = 1
 
 imagenOrg = images[imagenI]
 labelR = labels[imagenI]
 prediccion = clases_predichas[imagenI]
-probabilidades = predicciones[imagenI]
+probabilidades = probab[imagenI]
 confianza = probabilidades[prediccion]
 print("="*60)
 print(f"6. Visualizar imagen")
