@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 
 with open('mnist_mlp.json', 'r') as file:
     model = json.load(file)
+
+print("Tipo de model: ", type(model))
 print("="*60)
 print("1. Cargar e inspeccionar el modelo")
 print("="*60)
@@ -149,7 +151,7 @@ for i in range(10):
         bar = '#' * int(prob * 30)
         print(f"Digito {digito}: {prob:.4f} {bar}")
 
-imagenI = 1
+imagenI = 2
 
 imagenOrg = images[imagenI]
 labelR = labels[imagenI]
