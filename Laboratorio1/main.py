@@ -1,11 +1,12 @@
 import json
 import numpy as np
-
+import matplotlib.pyplot as plt
 
 with open('mnist_mlp.json', 'r') as file:
     model = json.load(file)
-
-print("Campos del modelo:" + str(model.keys()))
+print("="*60)
+print("1. Cargar e inspeccionar el modelo")
+print("="*60)
 
 capas = model['layers']
 
@@ -48,7 +49,7 @@ class capa_densa:
         elif self.activation == 'softmax':
             return softmax(z)
         else:
-            raise ValueError(f"Función de activación desconocida: {self.activation}")
+            raise ValueError("Error identificando la funcion")
 
 class red_neuronal:
 
@@ -73,58 +74,67 @@ data = np.load("mnist_test.npz")
 images = data['images']
 labels = data['labels']
 
+print("="*60)
+print("2. Cargar e preparar lel conjunto de prueba")
+print("="*60)
+print("\nDatos cargados:")
 print("Forma de las imágenes: " + str(images.shape))
-print("Forma de las etiquetas: " + str(labels.shape))
+print("Forma de las etiquetas: " + str(labels.shape)+"\n")
 
 imagesFloat = images.astype(np.float32)
 print(f"Conversion a float: {imagesFloat.dtype}")
 
-print(f"Conversion a float: {imagesFloat.shape}")
+print(f"Forma de las imágenes en float: {imagesFloat.shape}\n")
 
 imagesNorm = imagesFloat / model["preprocess"]["scale"]
-print(f"Normalizacion: {imagesNorm.shape}")
+print(f"Normalizacion (division entre 255): {imagesNorm.shape}\n")
 
 imagesAplanada = imagesNorm.reshape(imagesNorm.shape[0], -1)
-print(f"Aplanamiento: {imagesAplanada.shape}")
+print(f"Aplanamiento (forma final): {imagesAplanada.shape}\n")
 
-print(f"Verificacion: {imagesAplanada.shape[0]} x {imagesAplanada.shape[1]} = {imagesAplanada.shape[0]*imagesAplanada.shape[1]} pixeles totales")
+print(f"Verificacion: {imagesAplanada.shape[0]} x {imagesAplanada.shape[1]} = {imagesAplanada.shape[0]*imagesAplanada.shape[1]} pixeles totales\n")
 
-print("Crear red neuronal")
+print("="*60)
+print("3. Crear red neuronal")
+print("="*60+"\n")
 red = red_neuronal(model)
-print("Red neuronal creada exitosamente")
+print("Red neuronal creada exitosamente\n")
 
-print("Forward pass de la red neuronal")
+print("="*60)
+print("4. Ejecucion de inferencia sobre el conjunto completo")
+print("="*60+"\n")
 predicciones = red.forward(imagesAplanada)
-print("Forward pass completado exitosamente")
+print("Forward pass completado exitosamente\n")
 
 print("Comprobando salida final. Debe tener la forma  (10000, 10)")
-print(f"Forma de las predicciones: {predicciones.shape}")
+print(f"Forma de salida: {predicciones.shape}")
 if predicciones.shape == (10000, 10):
-    print("La salida final es correcta")
+    print("La salida final es correcta\n")
 else:
-    print("La salida final no es la esperada")
+    print("La salida final no es la esperada\n")
 
 print("Verificar que cada fila de la salida Softmax sume 1")
 sumas = np.sum(predicciones, axis=1)
 
 if np.allclose(sumas, 1):
-    print("Todas las filas suman 1")
+    print("Todas las filas suman 1\n")
 else:
     print("Algunas filas no suman 1")
-    print(f"Suma minima: {sumas.min()}, Suma maxima: {sumas.max()}")
+    print(f"Suma minima: {sumas.min()}, Suma maxima: {sumas.max()}\n")
 
 print("Clase predicha mediante el indice de mayor probabilidad")
 clases_predichas = np.argmax(predicciones, axis=1)
-print(f"Clases predichas: {clases_predichas.shape}")
-print(f"Primeras 10 clases predichas: {clases_predichas[:10]}")
+print(f"Clases predichas (forma): {clases_predichas.shape}")
+print(f"Primeras 10 clases predichas: {clases_predichas[:10]}\n")
 
 print("Calcular exactitud (se espera sea de ~96.66%):")
 ajustes = np.sum(clases_predichas == labels)
 exactitud = ajustes / len(labels)
-print(f"Exactitud: {exactitud * 100:.2f}%")
+print(f"Exactitud: {exactitud * 100:.2f}%\n")
 
-
-print("Predicciones individuales de algunos elementos")
+print("="*60)
+print("5. Predicciones individuales de algunos elementos")
+print("="*60+"\n")
 
 for i in range(10):
     label_real = labels[i]
@@ -133,8 +143,41 @@ for i in range(10):
     confianza = probabilidades[predic]
 
     correcto = "correcto" if label_real == predic else "incorrecto"
-    print(f"Imagen {i}: Etiqueta real: {label_real}, Predicción: {predic}, {correcto}, Confianza: {confianza:.4f} , Probabilidades:")
+    print(f"Imagen {i}: \nEtiqueta real: {label_real} \nPredicción: {predic}, {correcto} \nConfianza: {confianza:.4f} \nProbabilidades:")
     for digito in range(10):
         prob = probabilidades[digito]
         bar = '#' * int(prob * 30)
         print(f"Digito {digito}: {prob:.4f} {bar}")
+
+imagenI = 1
+
+imagenOrg = images[imagenI]
+labelR = labels[imagenI]
+prediccion = clases_predichas[imagenI]
+probabilidades = predicciones[imagenI]
+confianza = probabilidades[prediccion]
+print("="*60)
+print(f"6. Visualizar imagen")
+print("="*60+"\n")
+print(f"\nVisualizando la imagen {imagenI}:\n")
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+ax1.imshow(imagenOrg, cmap='gray')
+ax1.set_title(f"Imagen Original\nEtiqueta real: {labelR}", fontsize=14, fontweight='bold')
+ax1.axis('off')
+
+digit = np.arange(10)
+colores = ["blue" if d == prediccion else "gray" for d in digit]
+ax2.bar(digit, probabilidades, color=colores, edgecolor='black', linewidth=1.5)
+ax2.set_title(f"Prediccions: {prediccion} \nConfianza: {confianza:.4f}", fontsize=14, fontweight='bold')
+ax2.set_xlabel("Digito", fontsize=12, fontweight='bold')
+ax2.set_ylabel("Probabilidad", fontsize=12, fontweight='bold')
+
+ax2.set_xticks(digit)
+ax2.set_ylim([0, 1])
+ax2.grid(axis='y', alpha=0.3)
+
+plt.tight_layout()
+plt.show()
+plt.close()
+
